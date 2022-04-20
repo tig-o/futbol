@@ -1,5 +1,5 @@
 require 'CSV'
-# require_relative './game'
+require_relative './games'
 # require './lib/league'
 # require './lib/season'
 require_relative './team'
@@ -9,7 +9,7 @@ class StatTracker
 
   def initialize(data1, data2, data3)
     @teams = data2
-    @games = data1
+    @games = Games.new(data1)
     @game_teams = data3
     @teams_hash = team_hash
   end
@@ -24,49 +24,27 @@ class StatTracker
   end
 
   def highest_total_score
-    sum = []
-    @games.each do |row|
-      i = row[:away_goals].to_i + row[:home_goals].to_i
-      sum << i
-    end
-    sum.max
+    @games.highest_total_score
   end
 
   def lowest_total_score
-    sum = []
-    @games.each do |row|
-      i = row[:away_goals].to_i + row[:home_goals].to_i
-      sum << i
-    end
-    sum.min
+    @games.lowest_total_score
   end
 #SAI
   def percentage_home_wins
-    total_games = @games[:game_id].count.to_f
-    home_wins = 0
-    @games.each { |row| home_wins += 1 if row[:home_goals].to_i > row[:away_goals].to_i }
-    decimal = (home_wins.to_f / total_games)
-    decimal.round(2)
+    @games.percentage_home_wins
   end
 
   def percentage_visitor_wins
-    total_games = @games[:game_id].count.to_f
-    visitor_wins = 0
-    @games.each { |row| visitor_wins += 1 if row[:home_goals].to_i < row[:away_goals].to_i }
-    decimal = (visitor_wins.to_f / total_games)
-    decimal.round(2)
+    @games.percentage_visitor_wins
   end
 
   def percentage_ties
-    total_games = @games[:game_id].count.to_f
-    number_tied = 0
-    @games.each { |row| number_tied += 1 if row[:home_goals].to_i == row[:away_goals].to_i }
-    decimal = (number_tied.to_f / total_games)
-    decimal.round(2)
+    @games.percentage_ties
   end
 
   def games_by_season(season)
-    games_in_season = @games.collect { |row| row[:game_id] if row[:season] == season}
+    games_in_season = @games.games.collect { |row| row[:game_id] if row[:season] == season}
     games_in_season.compact
   end
 
@@ -128,17 +106,12 @@ class StatTracker
   end
   #C O O O O O O O O O O O O LIN
   def average_goals_per_game
-    goals = []
-    @games.each do |row|
-      i = row[:away_goals].to_f + row[:home_goals].to_f
-      goals << i
-    end
-    (goals.sum / goals.count).round(2)
+    @games.average_goals_per_game
   end
 
   def average_goals_by_season
     average_by_season = {}
-    season_hash = @games.group_by { |row| row[:season].itself }
+    season_hash = @games.games.group_by { |row| row[:season].itself }
     season_hash.each do |season, games|
       counter = 0
       game = 0
@@ -153,7 +126,7 @@ class StatTracker
 
   def count_of_games_by_season
     season_games_hash = {}
-    season_games = @games.group_by { |row| row[:season].itself }
+    season_games = @games.games.group_by { |row| row[:season].itself }
     season_games.each do |season, games|
       game = 0
       games.each do |key|
@@ -188,7 +161,7 @@ class StatTracker
   end
 
   def seasons_hash
-    @games.group_by { |row| row[:season].itself}
+    @games.games.group_by { |row| row[:season].itself}
   end
 
   def fewest_tackles(season)
@@ -299,10 +272,10 @@ class StatTracker
     end
   end
 
-  def team_average_number_of_goals_per_away_game(team_id)
+  def team_average_number_of_goals_per_away_game(team_id) #Helper
     away_game_count = 0
     away_game_score = 0
-    @games.each do |row|
+    @games.games.each do |row|
       if row[:away_team_id].to_i == team_id.to_i
         away_game_count += 1
         away_game_score += row[:away_goals].to_i
@@ -339,10 +312,10 @@ class StatTracker
     end
   end
 
-  def team_average_number_of_goals_per_home_game(team_id)
+  def team_average_number_of_goals_per_home_game(team_id) #Helper
     home_game_count = 0
     home_game_score = 0
-    @games.each do |row|
+    @games.games.each do |row|
       if row[:home_team_id].to_i == team_id.to_i
         home_game_count += 1
         home_game_score += row[:home_goals].to_i
@@ -389,7 +362,7 @@ class StatTracker
     @team_ids.count
   end
 
-  def team_average_number_of_goals_per_game(team_id)
+  def team_average_number_of_goals_per_game(team_id)#Helper
     @game_count = 0
     @game_score = 0
     @game_teams.each do |row|
@@ -466,9 +439,9 @@ class StatTracker
     seasons_win_avg_hash.min_by{|k,v| v}[0]
   end
 
-  def teams_games_played_in_season(team_id)
+  def teams_games_played_in_season(team_id) #Helper
     games_per_season_arr = []
-    @games.each do |row|
+    @games.games.each do |row|
       if (row[:home_team_id] || row[:away_team_id]) == team_id
         games_per_season_arr << row[:season]
       end
@@ -477,9 +450,9 @@ class StatTracker
     games_per_season_hash
   end
 
-  def teams_wins_in_season(team_id)
+  def teams_wins_in_season(team_id) #Helper
     season_wins_arr = []
-    @games.each do |row|
+    @games.games.each do |row|
       if row[:away_team_id] == team_id
         if row[:away_goals].to_f > row[:home_goals].to_f
           season_wins_arr << row[:season]
@@ -535,9 +508,9 @@ class StatTracker
      end
   end
 
-  def number_of_opponent_wins(team_id)
+  def number_of_opponent_wins(team_id) #Helper
     opponent_wins_arr = []
-    @games.each do |row|
+    @games.games.each do |row|
       if row[:away_team_id] == team_id
         if row[:away_goals].to_f < row[:home_goals].to_f
           opponent_wins_arr << row[:home_team_id]
@@ -553,9 +526,9 @@ class StatTracker
     opponent_wins_hash
   end
 
-  def number_of_games_against_opponents(team_id)
+  def number_of_games_against_opponents(team_id) #Helper
     opponent_games_arr = []
-    games.each do |row|
+    @games.games.each do |row|
       if row[:home_team_id] == team_id
       opponent_games_arr << row[:away_team_id]
       end
