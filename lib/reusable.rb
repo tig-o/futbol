@@ -9,7 +9,7 @@ module Reusable
   end
 
 
-  def hash_min(hash)
+  def hash_min_hash(hash)
     hash.each do |k,v|
       if v == hash.values.min
         return @teams_hash[k]
@@ -17,10 +17,26 @@ module Reusable
     end
   end
 
-  def hash_max(hash)
+  def hash_max_hash(hash)
     hash.each do |k,v|
       if v == hash.values.max
         return @teams_hash[k]
+      end
+    end
+  end
+
+  def hash_max(hash)
+    hash.each do |k,v|
+      if v == hash.values.compact.max
+        return k
+      end
+    end
+  end
+
+  def hash_min(hash)
+    hash.each do |k,v|
+      if v == hash.values.compact.min
+        return k
       end
     end
   end
