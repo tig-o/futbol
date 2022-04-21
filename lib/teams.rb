@@ -21,5 +21,8 @@ class Teams
     @teams_info
   end
 
+  def count_of_teams
+    @teams_hash.keys.count
+  end
 
 end

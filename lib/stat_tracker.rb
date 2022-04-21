@@ -308,13 +308,7 @@ class StatTracker
   end
   #stephen
   def count_of_teams
-    @team_ids = []
-    @team_csv[:team_id].each do |id|
-      if !@team_ids.include?(id.to_i)
-        @team_ids << id.to_i
-      end
-    end
-    @team_ids.count
+    @teams.count_of_teams
   end
 
   def team_average_number_of_goals_per_game(team_id)#Helper--game_teams
