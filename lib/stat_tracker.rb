@@ -2,9 +2,9 @@ require 'CSV'
 require_relative './games'
 # require './lib/league'
 # require './lib/season'
-require_relative './team'
+require_relative './reusable'
 class StatTracker
-  include Team
+  include Reusable
   attr_reader :teams, :games, :game_teams
 
   def initialize(data1, data2, data3)
@@ -273,59 +273,37 @@ class StatTracker
   end
 
   def highest_scoring_visitor
-    away_goals_hash = {}
-    away_games_hash = {}
     away_avg_hash = {}
-    @teams.each do |row|
-      away_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_away_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      away_avg_hash.merge!(k => @games.team_average_number_of_goals_per_away_game(k))
     end
-    away_avg_hash.each do |k, v|
-      if v == away_avg_hash.values.max
-        return @teams_hash[k]
-      end
-    end
+    hash_max(away_avg_hash)
+
   end
 
+
   def lowest_scoring_visitor
-    away_goals_hash = {}
-    away_games_hash = {}
     away_avg_hash = {}
-    @teams.each do |row|
-      away_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_away_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      away_avg_hash.merge!(k => @games.team_average_number_of_goals_per_away_game(k))
     end
-    away_avg_hash.each do |k, v|
-      if v == away_avg_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min(away_avg_hash)
   end
 
   def highest_scoring_home_team
-    home_goals_hash = {}
-    home_games_hash = {}
     home_avg_hash = {}
-    @teams.each do |row|
-      home_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_home_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      home_avg_hash.merge!(k => @games.team_average_number_of_goals_per_home_game(k))
     end
-    home_avg_hash.each do |k, v|
-      if v == home_avg_hash.values.max
-        return @teams_hash[k]
-      end
-    end
+    hash_max(home_avg_hash)
   end
 
   def lowest_scoring_home_team
-    home_goals_hash = {}
-    home_games_hash = {}
     home_avg_hash = {}
-    @teams.each do |row|
-      home_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_home_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      home_avg_hash.merge!(k => @games.team_average_number_of_goals_per_home_game(k))
     end
-    home_avg_hash.each do |k, v|
-      if v == home_avg_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min(home_avg_hash)
   end
   #stephen
   def count_of_teams
