@@ -102,7 +102,7 @@ it 'counts games per season' do
 end
 
 it 'shows the team with the most tackles in a given season' do
-  expect(@stat_tracker.most_tackles(20122013)).to eq("Houston Dynamo")
+  expect(@stat_tracker.most_tackles("20122013")).to eq("Houston Dynamo")
 end
 
 it 'shows the team with the fewest tackles in a given season' do
