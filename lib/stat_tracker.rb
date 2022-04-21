@@ -2,9 +2,9 @@ require 'CSV'
 require_relative './games'
 # require './lib/league'
 # require './lib/season'
-require_relative './team'
+require_relative './reusable'
 class StatTracker
-  include Team
+  include Reusable
   attr_reader :teams, :games, :game_teams
 
   def initialize(data1, data2, data3)
@@ -273,59 +273,37 @@ class StatTracker
   end
 
   def highest_scoring_visitor
-    away_goals_hash = {}
-    away_games_hash = {}
     away_avg_hash = {}
-    @teams.each do |row|
-      away_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_away_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      away_avg_hash.merge!(k => @games.team_average_number_of_goals_per_away_game(k))
     end
-    away_avg_hash.each do |k, v|
-      if v == away_avg_hash.values.max
-        return @teams_hash[k]
-      end
-    end
+    hash_max_hash(away_avg_hash)
+
   end
 
+
   def lowest_scoring_visitor
-    away_goals_hash = {}
-    away_games_hash = {}
     away_avg_hash = {}
-    @teams.each do |row|
-      away_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_away_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      away_avg_hash.merge!(k => @games.team_average_number_of_goals_per_away_game(k))
     end
-    away_avg_hash.each do |k, v|
-      if v == away_avg_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min_hash(away_avg_hash)
   end
 
   def highest_scoring_home_team
-    home_goals_hash = {}
-    home_games_hash = {}
     home_avg_hash = {}
-    @teams.each do |row|
-      home_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_home_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      home_avg_hash.merge!(k => @games.team_average_number_of_goals_per_home_game(k))
     end
-    home_avg_hash.each do |k, v|
-      if v == home_avg_hash.values.max
-        return @teams_hash[k]
-      end
-    end
+    hash_max_hash(home_avg_hash)
   end
 
   def lowest_scoring_home_team
-    home_goals_hash = {}
-    home_games_hash = {}
     home_avg_hash = {}
-    @teams.each do |row|
-      home_avg_hash.merge!("#{row[:team_id]}" => @games.team_average_number_of_goals_per_home_game(row[:team_id]))
+    @teams_hash.each do |k,v|
+      home_avg_hash.merge!(k => @games.team_average_number_of_goals_per_home_game(k))
     end
-    home_avg_hash.each do |k, v|
-      if v == home_avg_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min_hash(home_avg_hash)
   end
   #stephen
   def count_of_teams
@@ -347,33 +325,26 @@ class StatTracker
         @game_score += row[:goals].to_i
       end
     end
-    @game_score.to_f / @game_count.to_f
+    if @game_count > 0
+      return @game_score.to_f / @game_count.to_f
+    end
   end
 
   def best_offense
     @id_avg_hash = {}
-    @team_ids = game_teams[:team_id].uniq
-    @team_ids.each do |id|
-      @id_avg_hash.merge!("#{@teams_hash[id]}" => team_average_number_of_goals_per_game(id))
+    @teams_hash.each do |k,v|
+      @id_avg_hash.merge!("#{@teams_hash[k]}" => team_average_number_of_goals_per_game(k))
     end
-    @id_avg_hash.each do |k, v|
-      if v == @id_avg_hash.values.max
-        return k
-      end
-    end
+    hash_max(@id_avg_hash)
+
   end
 
   def worst_offense
     @id_avg_hash = {}
-    @team_ids = game_teams[:team_id].uniq
-    @team_ids.each do |id|
-      @id_avg_hash.merge!("#{@teams_hash[id]}" => team_average_number_of_goals_per_game(id))
+    @teams_hash.each do |k,v|
+      @id_avg_hash.merge!("#{@teams_hash[k]}" => team_average_number_of_goals_per_game(k))
     end
-    @id_avg_hash.each do |k, v|
-      if v == @id_avg_hash.values.min
-        return k
-      end
-    end
+    hash_min(@id_avg_hash)
   end
 
   def team_info(team_id)
@@ -410,11 +381,7 @@ class StatTracker
         end
       end
     end
-    opp_win_avg_hash.each do | k, v|
-      if v == opp_win_avg_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min_hash(opp_win_avg_hash)
   end
 
   def rival(team_id)#Can move to games later??
@@ -428,10 +395,6 @@ class StatTracker
          end
        end
      end
-     opp_win_avg_hash.each do | k, v|
-       if v == opp_win_avg_hash.values.max
-         return @teams_hash[k]
-       end
-     end
+  hash_max_hash(opp_win_avg_hash)
   end
 end
