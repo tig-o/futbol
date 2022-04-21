@@ -1,17 +1,18 @@
 require 'CSV'
 require_relative './games'
 # require './lib/league'
-# require './lib/season'
+require_relative './teams'
 require_relative './reusable'
 class StatTracker
   include Reusable
   attr_reader :teams, :games, :game_teams
 
   def initialize(data1, data2, data3)
-    @teams = data2
+    @team_csv = data2
     @game_teams = data3
     @teams_hash = team_hash
     @games = Games.new(data1, @teams_hash)
+    @teams = Teams.new(data2, @teams_hash)
   end
 
   def self.from_csv(locations)
@@ -152,7 +153,7 @@ class StatTracker
         tackle_hash.merge!(team => row[:tackles].sum)
       end
     end
-    @teams.each do |row|
+    @team_csv.each do |row|
       if row[:team_id] == tackle_hash.max_by{|k,v| v}[0]
         max_tackles_team << row[:teamname]
       end
@@ -308,7 +309,7 @@ class StatTracker
   #stephen
   def count_of_teams
     @team_ids = []
-    @teams[:team_id].each do |id|
+    @team_csv[:team_id].each do |id|
       if !@team_ids.include?(id.to_i)
         @team_ids << id.to_i
       end
@@ -348,14 +349,7 @@ class StatTracker
   end
 
   def team_info(team_id)
-    @teams_info = {}
-    @teams.each do |row|
-      if row[:team_id] == team_id
-        @teams_info.merge!('team_id' => row[:team_id], 'franchise_id' => row[:franchiseid],
-            'team_name'=> row[:teamname], 'abbreviation' =>row[:abbreviation], 'link' => row[:link])
-      end
-    end
-    @teams_info
+    @teams.team_info(team_id)
   end
 
   def best_season(team_id)

@@ -2,7 +2,7 @@ module Reusable
 
   def team_hash
     hash = {}
-    @teams.each do |row|
+    @team_csv.each do |row|
       hash[row[:team_id]] = row[:teamname]
     end
   return hash
