@@ -1,9 +1,13 @@
+require_relative './reusable'
+require_relative './stat_tracker'
 
 class Games
+  include Reusable
   attr_reader :games
 
-  def initialize(data)
+  def initialize(data, hash)
     @games = data
+    @teams_hash = hash
   end
 
   def highest_total_score
@@ -127,36 +131,36 @@ class Games
     season_wins_hash
   end
 
-  def number_of_opponent_wins(team_id) #Helper
-    opponent_wins_arr = []
-    @games.each do |row|
-      if row[:away_team_id] == team_id
-        if row[:away_goals].to_f < row[:home_goals].to_f
-          opponent_wins_arr << row[:home_team_id]
-        end
-      end
-      if row[:home_team_id] == team_id
-        if row[:home_goals].to_f < row[:away_goals].to_f
-          opponent_wins_arr << row[:away_team_id]
+  def favorite_opponent(team_id)#Can move to games later??
+    opp_win_avg_hash = {}
+    opp_wins = number_of_opponent_wins(team_id)
+    opp_games = number_of_games_against_opponents(team_id)
+    opp_games.each do | gk, gv |
+      opp_wins.each do | wk, wv |
+        if !opp_wins.keys.include?(gk)
+          opp_win_avg_hash.merge!("#{gk}" => 0.0)
+        else
+          if gk == wk
+            opp_win_avg_hash.merge!("#{gk}" => (wv.to_f / gv.to_f))
+          end
         end
       end
     end
-    opponent_wins_hash = opponent_wins_arr.tally
-    opponent_wins_hash
+    hash_min_hash(opp_win_avg_hash)
   end
 
-  def number_of_games_against_opponents(team_id) #Helper
-    opponent_games_arr = []
-    @games.each do |row|
-      if row[:home_team_id] == team_id
-      opponent_games_arr << row[:away_team_id]
-      end
-      if row[:away_team_id] == team_id
-      opponent_games_arr << row[:home_team_id]
-      end
-    end
-    opponents_games_hash = opponent_games_arr.tally
-    opponents_games_hash
+  def rival(team_id)#Can move to games later??
+     opp_win_avg_hash = {}
+     opp_wins = number_of_opponent_wins(team_id)
+     opp_games = number_of_games_against_opponents(team_id)
+     opp_games.each do | gk, gv |
+       opp_wins.each do | wk, wv |
+         if gk == wk
+           opp_win_avg_hash.merge!("#{wk}" => (wv.to_f / gv.to_f))
+         end
+       end
+     end
+  hash_max_hash(opp_win_avg_hash)
   end
 
   def score_counter # Module??

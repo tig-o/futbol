@@ -9,9 +9,9 @@ class StatTracker
 
   def initialize(data1, data2, data3)
     @teams = data2
-    @games = Games.new(data1)
     @game_teams = data3
     @teams_hash = team_hash
+    @games = Games.new(data1, @teams_hash)
   end
 
   def self.from_csv(locations)
@@ -367,34 +367,10 @@ class StatTracker
   end
 
   def favorite_opponent(team_id)#Can move to games later??
-    opp_win_avg_hash = {}
-    opp_wins = @games.number_of_opponent_wins(team_id)
-    opp_games = @games.number_of_games_against_opponents(team_id)
-    opp_games.each do | gk, gv |
-      opp_wins.each do | wk, wv |
-        if !opp_wins.keys.include?(gk)
-          opp_win_avg_hash.merge!("#{gk}" => 0.0)
-        else
-          if gk == wk
-            opp_win_avg_hash.merge!("#{gk}" => (wv.to_f / gv.to_f))
-          end
-        end
-      end
-    end
-    hash_min_hash(opp_win_avg_hash)
+    @games.favorite_opponent(team_id)
   end
 
   def rival(team_id)#Can move to games later??
-     opp_win_avg_hash = {}
-     opp_wins = @games.number_of_opponent_wins(team_id)
-     opp_games = @games.number_of_games_against_opponents(team_id)
-     opp_games.each do | gk, gv |
-       opp_wins.each do | wk, wv |
-         if gk == wk
-           opp_win_avg_hash.merge!("#{wk}" => (wv.to_f / gv.to_f))
-         end
-       end
-     end
-  hash_max_hash(opp_win_avg_hash)
+    @games.rival(team_id)
   end
 end
