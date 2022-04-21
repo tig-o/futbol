@@ -40,4 +40,36 @@ module Reusable
       end
     end
   end
+
+  def number_of_opponent_wins(team_id) #Helper
+    opponent_wins_arr = []
+    @games.each do |row|
+      if row[:away_team_id] == team_id
+        if row[:away_goals].to_f < row[:home_goals].to_f
+          opponent_wins_arr << row[:home_team_id]
+        end
+      end
+      if row[:home_team_id] == team_id
+        if row[:home_goals].to_f < row[:away_goals].to_f
+          opponent_wins_arr << row[:away_team_id]
+        end
+      end
+    end
+    opponent_wins_hash = opponent_wins_arr.tally
+    opponent_wins_hash
+  end
+
+  def number_of_games_against_opponents(team_id) #Helper
+    opponent_games_arr = []
+    @games.each do |row|
+      if row[:home_team_id] == team_id
+      opponent_games_arr << row[:away_team_id]
+      end
+      if row[:away_team_id] == team_id
+      opponent_games_arr << row[:home_team_id]
+      end
+    end
+    opponents_games_hash = opponent_games_arr.tally
+    opponents_games_hash
+  end
 end
