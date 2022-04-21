@@ -8,6 +8,9 @@ module Reusable
   return hash
   end
 
+  def seasons_hash
+    @games.games.group_by { |row| row[:season].itself}
+  end
 
   def hash_min_hash(hash)
     hash.each do |k,v|
@@ -91,5 +94,19 @@ module Reusable
       return @game_score.to_f / @game_count.to_f
     end
   end
+
+  def game_array(season)
+  array = []
+  working_array = seasons_hash
+  acceptable_games = []
+  (working_array[season]).each { |row| acceptable_games << row[:game_id]}
+  @game_teams.each do | row |
+      if acceptable_games.include?(row[:game_id])
+      array << row
+      end
+    end
+    array
+  end
+
 
 end

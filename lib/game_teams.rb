@@ -5,33 +5,11 @@ class GameTeams
   include Reusable
   attr_reader :game_teams
 
-  def initialize(data, hash, games)
+  def initialize(data, hash, games, teams)
     @teams_hash = hash
     @game_teams = data
     @games = games
-  end
-
-  def most_accurate_team(season_id)
-    hash = {}
-    final_hash = {}
-    season_games = games_by_season(season_id)
-    array = @game_teams.select { |row| season_games.include?(row[:game_id])}
-    array.each do |row|
-      if !hash.keys.include?(row[:team_id])
-        hash[row[:team_id]] = {goals: row[:goals].to_f, shots: row[:shots].to_f}
-      else
-        hash[row[:team_id]][:goals] += row[:goals].to_f
-        hash[row[:team_id]][:shots] += row[:shots].to_f
-      end
-    end
-    hash.each do |key, hash2|
-      final_hash.merge!("#{key}" => (hash2[:goals] / hash2[:shots]))
-    end
-    final_hash.each do |k, v|
-      if v == final_hash.values.max
-        return @teams_hash[k]
-      end
-    end
+    @teams = teams
   end
 
   def winningest_coach(season_id)
@@ -80,6 +58,25 @@ class GameTeams
     end
   end
 
+  def most_accurate_team(season_id)
+    hash = {}
+    final_hash = {}
+    season_games = games_by_season(season_id)
+    array = @game_teams.select { |row| season_games.include?(row[:game_id])}
+    array.each do |row|
+      if !hash.keys.include?(row[:team_id])
+        hash[row[:team_id]] = {goals: row[:goals].to_f, shots: row[:shots].to_f}
+      else
+        hash[row[:team_id]][:goals] += row[:goals].to_f
+        hash[row[:team_id]][:shots] += row[:shots].to_f
+      end
+    end
+    hash.each do |key, hash2|
+      final_hash.merge!("#{key}" => (hash2[:goals] / hash2[:shots]))
+    end
+    hash_max_hash(final_hash)
+  end
+
   def least_accurate_team(season_id)
     hash = {}
     final_hash = {}
@@ -96,11 +93,7 @@ class GameTeams
     hash.each do |key, hash2|
       final_hash.merge!("#{key}" => (hash2[:goals] / hash2[:shots]))
     end
-    final_hash.each do |k, v|
-      if v == final_hash.values.min
-        return @teams_hash[k]
-      end
-    end
+    hash_min_hash(final_hash)
   end
 
   def average_win_percentage(team_id)
@@ -155,4 +148,63 @@ class GameTeams
     end
     hash_min(@id_avg_hash)
   end
+
+  def most_tackles(season)
+    final_hash = {}
+    game_array = []
+    tackle_hash = {}
+    min_tackles_team = []
+    game_array = game_array(season)
+      team_hash = game_array.group_by { |row| row[:team_id].itself }
+      team_hash.each do | team, stats |
+        counter = 0
+        stats.each do | row |
+          counter += row[:tackles].to_i
+        end
+        tackle_hash.merge!("#{team}" => counter)
+      end
+      tackle_hash.each do |k, v|
+        if v == tackle_hash.invert.max[0]
+          min_tackles_team << k
+        end
+      end
+      min_tackles_team.each do |element|
+        @teams_hash.each do |k, v|
+          if element == k
+            final_hash.merge!("#{element}" => v)
+          end
+        end
+      end
+      final_hash.invert.sort[0][0]
+  end
+
+  def fewest_tackles(season)
+    final_hash = {}
+    game_array = []
+    tackle_hash = {}
+    min_tackles_team = []
+    game_array = game_array(season)
+      team_hash = game_array.group_by { |row| row[:team_id].itself }
+      team_hash.each do | team, stats |
+        counter = 0
+        stats.each do | row |
+          counter += row[:tackles].to_i
+        end
+        tackle_hash.merge!("#{team}" => counter)
+      end
+      tackle_hash.each do |k, v|
+        if v == tackle_hash.invert.min[0]
+          min_tackles_team << k
+        end
+      end
+      min_tackles_team.each do |element|
+        @teams_hash.each do |k, v|
+          if element == k
+            final_hash.merge!("#{element}" => v)
+          end
+        end
+      end
+      final_hash.invert.sort[0][0]
+  end
+
 end

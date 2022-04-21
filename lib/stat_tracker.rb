@@ -12,7 +12,7 @@ class StatTracker
     @teams_hash = team_hash
     @games = Games.new(data1, @teams_hash)
     @teams = Teams.new(data2, @teams_hash)
-    @game_teams = GameTeams.new(data3, @teams_hash, @games)
+    @game_teams = GameTeams.new(data3, @teams_hash, @games, @teams)
   end
 
   def self.from_csv(locations)
@@ -89,66 +89,11 @@ class StatTracker
   end
 
   def most_tackles(season)
-  game_array = []
-  tackle_hash = {}
-  max_tackles_team = []
-  @game_teams.game_teams.each do | row |
-      if season.to_s.include?(row[:game_id][0..3])
-      game_array << row
-      end
-    end
-    team_hash = game_array.group_by { |row| row[:team_id].itself }
-    team_hash.each do | team, stats |
-      stats.map do | row |
-        tackle_hash.merge!(team => row[:tackles].sum)
-      end
-    end
-    @team_csv.each do |row|
-      if row[:team_id] == tackle_hash.max_by{|k,v| v}[0]
-        max_tackles_team << row[:teamname]
-      end
-    end
-    return max_tackles_team[0]
-  end
-
-  def seasons_hash
-    @games.games.group_by { |row| row[:season].itself}
+  @game_teams.most_tackles(season)
   end
 
   def fewest_tackles(season)
-  final_hash = {}
-  game_array = []
-  tackle_hash = {}
-  min_tackles_team = []
-  working_array = seasons_hash
-  acceptable_games = []
-  (working_array[season]).each { |row| acceptable_games << row[:game_id]}
-  @game_teams.game_teams.each do | row |
-      if acceptable_games.include?(row[:game_id])
-      game_array << row
-      end
-    end
-    team_hash = game_array.group_by { |row| row[:team_id].itself }
-    team_hash.each do | team, stats |
-      counter = 0
-      stats.each do | row |
-        counter += row[:tackles].to_i
-      end
-      tackle_hash.merge!("#{team}" => counter)
-    end
-    tackle_hash.each do |k, v|
-      if v == tackle_hash.invert.min[0]
-        min_tackles_team << k
-      end
-    end
-    min_tackles_team.each do |element|
-      @teams_hash.each do |k, v|
-        if element == k
-          final_hash.merge!("#{element}" => v)
-        end
-      end
-    end
-    final_hash.invert.sort[0][0]
+  @game_teams.fewest_tackles(season)
   end
 
   def most_goals_scored(team_id)
@@ -173,9 +118,7 @@ class StatTracker
       away_avg_hash.merge!(k => @games.team_average_number_of_goals_per_away_game(k))
     end
     hash_max_hash(away_avg_hash)
-
   end
-
 
   def lowest_scoring_visitor
     away_avg_hash = {}
@@ -204,7 +147,6 @@ class StatTracker
   def count_of_teams
     @teams.count_of_teams
   end
-
 
   def best_offense
   @game_teams.best_offense
